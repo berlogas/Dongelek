@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Графический редактор данных для рядов</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta
+      charset="utf-8"
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <script src="js/chart.min.js"></script>
+    <script src="js/chartjs-plugin-dragdata.min.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/table.css" />
+    <link rel="stylesheet" href="css/jquery.modal.css" />
+    <link rel="stylesheet" href="css/spinner.css" />
+    <link rel="stylesheet" href="css/toast.css" />
+    <link rel="stylesheet" href="css/tristate.css" />
+  </head>
+  <body>
+  <div class="fixed-header">
+        <div class="container">
+            Графический редактор данных для рядов
+        </div>
+    </div>
+    <main>
+
+        <!-- <div style="margin-top: 10px;" >
+          <span class="tristate tristate-switcher">
+            <input type="radio" id="item2-state-X" name="item1" value="X">
+            <input type="radio" id="item2-state-null" name="item1" value="0" checked>
+            <input type="radio" id="item2-state-Y" name="item1" value="Y">
+            <i></i>
+            
+          </span>
+        </div>
+        <div style="margin-top: 10px;" >
+          <span class="tristate tristate-switcher">
+            <input type="radio" id="item2-state-X" name="item2" value="X">
+            <input type="radio" id="item2-state-null" name="item2" value="0" checked>
+            <input type="radio" id="item2-state-Y" name="item2" value="Y">
+            <i></i>
+            
+          </span>
+        </div> -->
+
+
+      <div hidden="hidden" class="loader" id="loader">
+        <!-- Крутилочка -->
+        <div class="inner one"></div>
+        <div class="inner two"></div>
+        <div class="inner three"></div>
+      </div>
+      <div class="form-container">
+        <div id="preview"></div>
+        <form class="decor">
+          <div class="form-inner">
+            <label class="button" for="csvFile" id="fname">Выберите .csv или .txt файл</label>
+            <input type="file" id="csvFile" name="myfile" accept=".csv, .txt" />
+          </div>
+        </form>
+        <div class="table-container" style="display: none">
+          <h5 id="h5">
+            Выберите одну колонку для оси X (например, дата, глубина или
+            давление) и одну или несколько для оси Y (показаны первые 12
+            записей)
+          </h5>
+          <div class="d table-scroll" id="center1"></div>
+          <div class="d table-scroll-body" id="center2"></div>
+        </div>
+
+        <form
+          class="decor"
+          id="addPoints"
+          method="post"
+          enctype="multipart/form-data"
+          onsubmit="return startValidation()"
+          action=""
+        >
+          <div id="fname">
+            <div class="edit-container form-inner">
+              <!-- Первый (главный) список (изначально заполнен вручную) -->
+              <div>
+                <div hidden="hidden" class="List1">
+                  <label for="List1">Тип данных по оси X:</label>
+                  <select id="List1">
+                    <!-- <option>- -</option> -->
+                    <option value="num">число</option>
+                    <option value="date">дата-время</option>
+                  </select>
+                </div>
+
+                <div class="block">
+                  <div style="display: flex">
+                    <label for="accuracy1"
+                      >Шаг по оси X <br />для осреднения, <br />0 - без
+                      пересчета:</label
+                    >
+                    <input
+                      type="number"
+                      id="accuracy1"
+                      name="accuracy1"
+                      min="0"
+                      step="0.05"
+                      value="0"
+                    />
+                  </div>
+                </div>
+
+                <div class="block" style="display: none">
+                  <div id="fdate">
+                    <label for="dateformat"
+                      >Формат даты-времени в исходных данных:</label
+                    >
+                    <select name="dateformat" id="dateformat"></select>
+                  </div>
+                  <div style="display: flex">
+                    <!-- Подчиненный список 1 (изначально пуст) -->
+                    <label for="accuracy1"
+                      >Шаг по оси X <br />для осреднения:</label
+                    >
+                    <select size="10" id="List2"></select>
+                    <!-- Подчиненный список 2 (изначально пуст) -->
+                    <select size="10" id="List3"></select>
+                  </div>
+                </div>
+              </div>
+
+              <button class="button" type="submit">Редактор по графику</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="graph-container" style="display: none">
+        <div class="card">
+          <div class="select"></div>
+          <div class="tg-chart" id="chart">
+            <canvas
+              data-el="main"
+              id="chartJSContainer"
+              style="width: 90%"
+            ></canvas>
+            <div class="tg-chart-slider" id="tgslider">
+              <canvas
+                data-el="slider"
+                id="chartJSSlider"
+                style="width: 90%; height: 36px"
+              ></canvas>
+              <div data-el="left" class="tg-chart-slider__left">
+                <div
+                  class="tg-chart-slider__arrow--left"
+                  data-el="arrow"
+                  data-type="left"
+                >
+                  <span data-type="left" class="tg-s">&#8596;</span>
+                </div>
+              </div>
+              <div
+                data-el="window"
+                data-type="window"
+                class="tg-chart-slider__window"
+              ></div>
+              <div data-el="right" class="tg-chart-slider__right">
+                <div
+                  class="tg-chart-slider__arrow--right"
+                  data-el="arrow"
+                  data-type="right"
+                >
+                  <span data-type="right" class="tg-s">&#8596;</span>
+                </div>
+              </div>
+            </div>
+            <section class="buttons"></section>
+          </div>
+        </div>
+      </div>
+      <!-- <div id="ex2" class="modal"> -->
+      <form action="" class="login_form modal" id="out" style="display: none">
+        <h3>Параметры Hampel Filter</h3>
+        <p>
+          Для каждого образца функция вычисляет медиану окна, состоящего из
+          образца и его окружающих образцов, по M на сторону. Она также
+          оценивает стандартное отклонение каждого образца относительно медиана
+          окна с использованием медианного абсолютного отклонения. Если образец
+          отличается от медианы более чем на N стандартных отклонений, он
+          заменяется медианой.
+        </p>
+        <p>
+          <label>Число стандартных отклонений N:</label
+          ><input id="threshold" value="3" type="text" />
+        </p>
+        <p>
+          <label>Число образцов с каждой стороны M:</label
+          ><input id="half" value="5" type="text" />
+        </p>
+      </form>
+      <form
+        action=""
+        class="login_form modal"
+        id="smooth"
+        style="display: none"
+      >
+        <h3>Параметры скользящего среднего</h3>
+        <p>
+          <label>Размер окна:</label
+          ><input id="wincount" value="3" type="text" />
+        </p>
+      </form>
+      <form action="" class="login_form modal" id="crop" style="display: none">
+        <h3>Новые границы по X</h3>
+        <p>
+          <label for="start">Начало:</label>
+          <input id="start" name="trip-start" />
+        </p>
+        <p>
+          <label for="finish">Окончание:</label>
+          <input id="finish" name="trip-finish" />
+        </p>
+        <p>
+          Новые границы применятся ко всем Y, выбранным для обработки! Отмены
+          обрезки нет.
+        </p>
+      </form>
+      <form action="" class="login_form modal" id="exp" style="display: none">
+        <h3>Параметры сохранения</h3>
+        <p>
+          <label>Имя файла:</label><input id="expfile" value="" type="text" />
+        </p>
+        <span id="dateexport">
+          <p>
+            <label for="dateformate">Формат даты-времени для сохранения:</label>
+            <select name="dateformate" id="dateformate"></select>
+          </p>
+        </span>
+      </form>
+    </main>
+    <div class="fixed-footer">
+        <div class="container"> &copy; 2022 Copyright Бережинский О.А.  </div>        
+    </div>
+    <script src="js/linkedselect.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/moment.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/akima.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="js/smartscale.js"></script>
+    <script src="js/jquery.modal.js"></script>
+    <script src="js/formats.js"></script>
+    <script src="js/script.js"></script>
+  </body>
+</html>
